@@ -3,6 +3,7 @@ let selectedAnswer = null;
 let answered = false;
 let score = 0;
 let quizzes = [];
+let isTransitioning = false; // 遷移中フラグを追加
 
 // ページ読み込み時にクイズデータを取得
 document.addEventListener('DOMContentLoaded', () => {
@@ -39,6 +40,7 @@ function displayQuiz() {
     const quiz = quizzes[currentQuizIndex];
     answered = false;
     selectedAnswer = null;
+    isTransitioning = false; // 遷移フラグをリセット
 
     // 質問の表示
     document.getElementById('question').textContent = quiz.question;
@@ -58,9 +60,12 @@ function displayQuiz() {
     document.getElementById('feedback').textContent = '';
     document.getElementById('feedback').className = 'feedback';
     document.getElementById('explanation').style.display = 'none';
+    document.getElementById('explanation').textContent = '';
 
     // ボタンの状態をリセット
-    document.getElementById('btn-next').disabled = true;
+    const btnNext = document.getElementById('btn-next');
+    btnNext.disabled = true;
+    btnNext.textContent = '次へ';
 
     // プログレスバーの更新
     updateProgress();
@@ -86,9 +91,11 @@ function selectAnswer(index) {
 
 // 次の問題へ
 function nextQuiz() {
-    if (selectedAnswer === null) return;
+    if (selectedAnswer === null || answered || isTransitioning) return;
 
     answered = true;
+    isTransitioning = true; // 遷移中フラグを立てる
+
     const quiz = quizzes[currentQuizIndex];
     const options = document.querySelectorAll('.option');
 
@@ -110,21 +117,13 @@ function nextQuiz() {
         explanationDiv.style.display = 'block';
     }
 
-    // ボタンのテキストを変更
-    const btnNext = document.getElementById('btn-next');
-    if (currentQuizIndex === quizzes.length - 1) {
-        btnNext.textContent = '結果を見る';
-    } else {
-        btnNext.textContent = '次へ';
-    }
-
     // 次の問題を設定
     currentQuizIndex++;
-    
-    // 次の問題を表示（修正：ここを追加）
+
+    // 1秒後に次の問題を表示
     setTimeout(() => {
         displayQuiz();
-    }, 1000);
+    }, 1500);
 }
 
 // フィードバックの表示
@@ -170,6 +169,7 @@ function restartQuiz() {
     selectedAnswer = null;
     answered = false;
     score = 0;
+    isTransitioning = false;
 
     document.querySelector('.quiz-container').classList.add('active');
     document.querySelector('.result-container').classList.remove('active');
