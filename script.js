@@ -120,6 +120,11 @@ function nextQuiz() {
 
     // 次の問題を設定
     currentQuizIndex++;
+    
+    // 次の問題を表示（修正：ここを追加）
+    setTimeout(() => {
+        displayQuiz();
+    }, 1000);
 }
 
 // フィードバックの表示
