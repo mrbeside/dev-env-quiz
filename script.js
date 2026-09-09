@@ -2,6 +2,7 @@ let currentQuizIndex = 0;
 let selectedAnswer = null;
 let answered = false;
 let score = 0;
+let quizBank = [];
 let quizzes = [];
 let isTransitioning = false; // 遷移中フラグを追加
 
@@ -16,12 +17,43 @@ async function loadQuizzes() {
     try {
         const response = await fetch('quiz-data.json');
         const data = await response.json();
-        quizzes = data.quizzes;
+        quizBank = data.quizzes;
+        prepareQuizSession();
         displayQuiz();
     } catch (error) {
         console.error('クイズデータの読み込みに失敗しました:', error);
         document.querySelector('.question').textContent = 'データの読み込みに失敗しました';
     }
+}
+
+// 配列をランダムに並べ替える（Fisher-Yates法）
+function shuffle(items) {
+    const shuffled = [...items];
+
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const randomIndex = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[i]];
+    }
+
+    return shuffled;
+}
+
+// 問題順と選択肢順を毎回作り直す
+function prepareQuizSession() {
+    quizzes = shuffle(quizBank).map(quiz => {
+        const shuffledOptions = shuffle(
+            quiz.options.map((text, originalIndex) => ({
+                text,
+                isCorrect: originalIndex === quiz.answer
+            }))
+        );
+
+        return {
+            ...quiz,
+            options: shuffledOptions.map(option => option.text),
+            answer: shuffledOptions.findIndex(option => option.isCorrect)
+        };
+    });
 }
 
 // イベントリスナーの設定
@@ -170,6 +202,7 @@ function restartQuiz() {
     answered = false;
     score = 0;
     isTransitioning = false;
+    prepareQuizSession();
 
     document.querySelector('.quiz-container').classList.add('active');
     document.querySelector('.result-container').classList.remove('active');
