@@ -97,7 +97,7 @@ function displayQuiz() {
     // ボタンの状態をリセット
     const btnNext = document.getElementById('btn-next');
     btnNext.disabled = true;
-    btnNext.textContent = '次へ';
+    btnNext.textContent = '回答する';
 
     // プログレスバーの更新
     updateProgress();
@@ -123,11 +123,18 @@ function selectAnswer(index) {
 
 // 次の問題へ
 function nextQuiz() {
-    if (selectedAnswer === null || answered || isTransitioning) return;
+    if (isTransitioning) return;
+
+    // 採点後に押したときだけ次の問題へ進む
+    if (answered) {
+        currentQuizIndex++;
+        displayQuiz();
+        return;
+    }
+
+    if (selectedAnswer === null) return;
 
     answered = true;
-    isTransitioning = true; // 遷移中フラグを立てる
-
     const quiz = quizzes[currentQuizIndex];
     const options = document.querySelectorAll('.option');
 
@@ -149,13 +156,10 @@ function nextQuiz() {
         explanationDiv.style.display = 'block';
     }
 
-    // 次の問題を設定
-    currentQuizIndex++;
-
-    // 1秒後に次の問題を表示
-    setTimeout(() => {
-        displayQuiz();
-    }, 1500);
+    // 解説を読んでから、手動で次へ進める
+    const btnNext = document.getElementById('btn-next');
+    btnNext.textContent = currentQuizIndex === quizzes.length - 1 ? '結果を見る' : '次へ';
+    btnNext.disabled = false;
 }
 
 // フィードバックの表示
